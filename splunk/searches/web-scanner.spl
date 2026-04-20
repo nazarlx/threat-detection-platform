@@ -1,0 +1,5 @@
+index=* sourcetype="apache:access"
+| rex field=_raw "^(?<clientip>\S+)"
+| bin _time span=1m
+| stats count by clientip, _time
+| where count > 100

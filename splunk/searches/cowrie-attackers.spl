@@ -1,0 +1,4 @@
+index=main sourcetype="aws:s3:accesslogs"
+| rex field=_raw "\[HoneyPotSSHTransport,\d+,(?<src_ip>\d+\.\d+\.\d+\.\d+)\]"
+| stats count by src_ip
+| sort -count

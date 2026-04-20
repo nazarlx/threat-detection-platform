@@ -1,0 +1,38 @@
+{
+    "title": "Web Security Dashboard",
+    "description": "",
+    "inputs": {
+        "input_global_trp": {
+            "options": {
+                "defaultValue": "-24h@h,now",
+                "token": "global_time"
+            },
+            "title": "Global Time Range",
+            "type": "input.timerange"
+        }
+    },
+    "defaults": {
+        "dataSources": {
+            "ds.search": {
+                "options": {
+                    "queryParameters": {
+                        "earliest": "$global_time.earliest$",
+                        "latest": "$global_time.latest$"
+                    }
+                }
+            }
+        }
+    },
+    "visualizations": {
+        "viz_0NT6bfZP": {"dataSources": {"primary": "ds_M49CCRAN"}, "options": {}, "type": "splunk.pie"},
+        "viz_50ThKroi": {"dataSources": {"primary": "ds_tAkGMlja"}, "options": {}, "type": "splunk.bar"},
+        "viz_PQmtVPoE": {"dataSources": {"primary": "ds_gf8MPzak"}, "options": {}, "type": "splunk.table"},
+        "viz_wJMaOVtk": {"dataSources": {"primary": "ds_SM7smdbq"}, "title": "Requests Timeline by IP", "type": "splunk.column"}
+    },
+    "dataSources": {
+        "ds_M49CCRAN": {"name": "Search_3", "options": {"query": "index=* sourcetype=\"apache:access\" | stats count by status | sort -count"}, "type": "ds.search"},
+        "ds_SM7smdbq": {"name": "Search_4", "options": {"query": "index=* sourcetype=\"apache:access\" \n| bin _time span=1m \n| stats count by _time, clientip"}, "type": "ds.search"},
+        "ds_gf8MPzak": {"name": "Search_2", "options": {"query": "index=* sourcetype=\"apache:access\" | stats count by uri | sort -count | head 20"}, "type": "ds.search"},
+        "ds_tAkGMlja": {"name": "Search_1", "options": {"query": "index=* sourcetype=\"apache:access\" | stats count by clientip | sort -count | head 10"}, "type": "ds.search"}
+    }
+}
