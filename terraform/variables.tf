@@ -22,3 +22,15 @@ variable "aws_account_id" {
   description = "AWS Account ID for S3 bucket naming"
   type        = string
 }
+
+variable "hec_token" {
+  description = "Splunk HEC token for Cowrie logs"
+  type        = string
+  sensitive   = true
+}
+
+variable "tailscale_authkey" {
+  description = "Tailscale auth key for honeypot EC2"
+  type        = string
+  sensitive   = true
+}
