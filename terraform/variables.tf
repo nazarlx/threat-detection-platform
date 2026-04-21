@@ -34,3 +34,9 @@ variable "tailscale_authkey" {
   type        = string
   sensitive   = true
 }
+
+variable "ubuntu_password" {
+  description = "Password for ubuntu user on EC2"
+  type        = string
+  sensitive   = true
+}

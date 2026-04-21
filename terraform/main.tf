@@ -15,17 +15,14 @@ resource "aws_vpc" "honeypot_vpc" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
-  tags = {
-    Name    = "honeypot-vpc"
-    Project = "threat-detection-platform"
-  }
+  tags = { Name = "honeypot-vpc", Project = "threat-detection-platform" }
 }
 
 resource "aws_subnet" "honeypot_subnet" {
   vpc_id                  = aws_vpc.honeypot_vpc.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
-  tags                    = { Name = "honeypot-subnet" }
+  tags = { Name = "honeypot-subnet" }
 }
 
 resource "aws_internet_gateway" "honeypot_igw" {
@@ -94,16 +91,39 @@ apt-get install -y docker.io awscli curl
 systemctl start docker
 systemctl enable docker
 
-# Cowrie
+# Cowrie з захистом
 docker run -d \
   --name cowrie \
   --restart always \
+  --read-only \
+  --tmpfs /tmp \
+  --security-opt no-new-privileges \
   -p 2222:2222 \
   cowrie/cowrie:latest
 
 # Tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
 tailscale up --authkey=${var.tailscale_authkey} --advertise-tags=tag:honeypot
+
+# Захист Tailscale state
+chmod 600 /var/lib/tailscale/tailscaled.state
+chattr +i /var/lib/tailscale/tailscaled.state
+
+# SSH hardening
+sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+sed -i 's/#PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+systemctl restart sshd
+
+# sudo пароль
+echo "ubuntu:${var.ubuntu_password}" | chpasswd
+sed -i 's/NOPASSWD:ALL/ALL/' /etc/sudoers.d/90-cloud-init-users
+
+# UFW firewall
+ufw default deny incoming
+ufw allow 22/tcp
+ufw allow 2222/tcp
+ufw allow 41641/udp
+ufw --force enable
 
 # HEC скрипт
 cat > /usr/local/bin/cowrie-to-splunk.sh << 'SCRIPT'
@@ -132,10 +152,7 @@ EOF
 
 resource "aws_s3_bucket" "cowrie_logs" {
   bucket = "cowrie-logs-${var.aws_account_id}"
-  tags = {
-    Name    = "cowrie-logs"
-    Project = "threat-detection-platform"
-  }
+  tags = { Name = "cowrie-logs", Project = "threat-detection-platform" }
 }
 
 resource "aws_s3_bucket_versioning" "cowrie_logs" {
