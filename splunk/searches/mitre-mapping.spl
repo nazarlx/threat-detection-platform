@@ -1,0 +1,13 @@
+index=main sourcetype=cowrie
+| rex field=_raw "login attempt \[b'(?<username>[^']+)'/b'(?<password>[^']+)'\]"
+| rex field=_raw "CMD: (?<command>.+)"
+| eval mitre_technique=case(
+    isnotnull(password), "T1110.001 - Brute Force",
+    command="uname -s -m", "T1082 - System Info Discovery",
+    command="cat .ssh", "T1552.004 - Private Keys",
+    match(command, "ls|ps|df|whoami"), "T1082 - System Info Discovery",
+    true(), "Unknown"
+)
+| where mitre_technique!="Unknown"
+| stats count by mitre_technique
+| sort -count
