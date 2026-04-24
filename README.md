@@ -7,7 +7,7 @@ A SOC home lab that collects real-world attack data from a public-facing honeypo
 **4 days of data collected:**
 - 15+ unique attackers from 6 countries
 - 500+ events indexed in Splunk
-- Top attacker: `179.124.29.29` (Brazil) — confirmed malicious by 15/95 VirusTotal vendors
+- Top attackers: India (76 events), China (69 events), Brazil (17 events), USA (12 events)
 - Most common technique: T1082 System Information Discovery
 
 ## Architecture
