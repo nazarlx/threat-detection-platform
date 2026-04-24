@@ -1,1 +1,205 @@
-{вставити повний JSON}
+{
+    "title": "Cowrie Honeypot Dashboard",
+    "description": "",
+    "inputs": {
+        "input_global_trp": {
+            "options": {
+                "defaultValue": "-24h@h,now",
+                "token": "global_time"
+            },
+            "title": "Global Time Range",
+            "type": "input.timerange"
+        }
+    },
+    "defaults": {
+        "dataSources": {
+            "ds.search": {
+                "options": {
+                    "queryParameters": {
+                        "earliest": "$global_time.earliest$",
+                        "latest": "$global_time.latest$"
+                    }
+                }
+            },
+            "ds.spl2": {
+                "options": {
+                    "queryParameters": {
+                        "earliest": "$global_time.earliest$",
+                        "latest": "$global_time.latest$"
+                    }
+                }
+            }
+        }
+    },
+    "visualizations": {
+        "viz_geo": {
+            "dataSources": {
+                "primary": "ds_geo_points"
+            },
+            "options": {
+                "center": [
+                    37.582628826952316,
+                    62.20249288551895
+                ],
+                "zoom": 2.728127364053508
+            },
+            "title": "Attacks by country",
+            "type": "splunk.map"
+        },
+        "viz_mitre": {
+            "dataSources": {
+                "primary": "ds_mitre"
+            },
+            "title": "MITRE ATT&CK techniques",
+            "type": "splunk.bar"
+        },
+        "viz_timeline": {
+            "dataSources": {
+                "primary": "ds_timeline"
+            },
+            "title": "Attack timeline by hour",
+            "type": "splunk.column"
+        },
+        "viz_top_attackers": {
+            "dataSources": {
+                "primary": "ds_top_attackers"
+            },
+            "title": "Top attackers by IP",
+            "type": "splunk.bar"
+        },
+        "viz_top_commands": {
+            "dataSources": {
+                "primary": "ds_top_commands"
+            },
+            "title": "Top commands executed",
+            "type": "splunk.table"
+        },
+        "viz_top_passwords": {
+            "dataSources": {
+                "primary": "ds_top_passwords"
+            },
+            "title": "Top passwords used",
+            "type": "splunk.table"
+        }
+    },
+    "dataSources": {
+        "ds_geo_points": {
+            "options": {
+                "query": "index=main sourcetype=cowrie | rex field=_raw \"\\[HoneyPotSSHTransport,\\d+,(?<src_ip>\\d+\\.\\d+\\.\\d+\\.\\d+)\\]\" | where isnotnull(src_ip) AND src_ip!=\"5.173.176.91\" AND src_ip!=\"5.173.154.14\" | stats count by src_ip | iplocation src_ip | geostats latfield=lat longfield=lon count by src_ip"
+            },
+            "type": "ds.search"
+        },
+        "ds_mitre": {
+            "options": {
+                "query": "index=main sourcetype=cowrie | rex field=_raw \"login attempt \\[b'(?<username>[^']+)'/b'(?<password>[^']+)'\\]\" | rex field=_raw \"CMD: (?<command>.+)\" | eval mitre_technique=case(isnotnull(password), \"T1110.001 - Brute Force\", command=\"uname -s -m\", \"T1082 - System Info Discovery\", command=\"cat .ssh\", \"T1552.004 - Private Keys\", match(command, \"ls|ps|df|whoami\"), \"T1082 - System Info Discovery\", true(), \"Unknown\") | where mitre_technique!=\"Unknown\" | stats count by mitre_technique | sort -count"
+            },
+            "type": "ds.search"
+        },
+        "ds_timeline": {
+            "options": {
+                "query": "index=main sourcetype=cowrie | rex field=_raw \"\\[HoneyPotSSHTransport,\\d+,(?<src_ip>\\d+\\.\\d+\\.\\d+\\.\\d+)\\]\" | where isnotnull(src_ip) AND src_ip!=\"5.173.176.91\" AND src_ip!=\"5.173.154.14\" | bin _time span=1h | stats count by _time | sort _time"
+            },
+            "type": "ds.search"
+        },
+        "ds_top_attackers": {
+            "options": {
+                "query": "index=main sourcetype=cowrie | rex field=_raw \"\\[HoneyPotSSHTransport,\\d+,(?<src_ip>\\d+\\.\\d+\\.\\d+\\.\\d+)\\]\" | where isnotnull(src_ip) AND src_ip!=\"5.173.176.91\" AND src_ip!=\"5.173.154.14\" | stats count by src_ip | sort -count | head 10"
+            },
+            "type": "ds.search"
+        },
+        "ds_top_commands": {
+            "options": {
+                "query": "index=main sourcetype=cowrie | rex field=_raw \"CMD: (?<command>.+)\" | where isnotnull(command) | stats count by command | sort -count | head 10"
+            },
+            "type": "ds.search"
+        },
+        "ds_top_passwords": {
+            "options": {
+                "query": "index=main sourcetype=cowrie | rex field=_raw \"login attempt \\[b'(?<username>[^']+)'/b'(?<password>[^']+)'\\]\" | where isnotnull(password) | stats count by username, password | sort -count | head 10"
+            },
+            "type": "ds.search"
+        }
+    },
+    "layout": {
+        "globalInputs": [
+            "input_global_trp"
+        ],
+        "layoutDefinitions": {
+            "layout_1": {
+                "options": {},
+                "structure": [
+                    {
+                        "item": "viz_top_attackers",
+                        "position": {
+                            "h": 389,
+                            "w": 600,
+                            "x": 0,
+                            "y": 0
+                        },
+                        "type": "block"
+                    },
+                    {
+                        "item": "viz_timeline",
+                        "position": {
+                            "h": 314,
+                            "w": 600,
+                            "x": 600,
+                            "y": 0
+                        },
+                        "type": "block"
+                    },
+                    {
+                        "item": "viz_top_passwords",
+                        "position": {
+                            "h": 270,
+                            "w": 600,
+                            "x": 0,
+                            "y": 389
+                        },
+                        "type": "block"
+                    },
+                    {
+                        "item": "viz_top_commands",
+                        "position": {
+                            "h": 345,
+                            "w": 600,
+                            "x": 600,
+                            "y": 314
+                        },
+                        "type": "block"
+                    },
+                    {
+                        "item": "viz_geo",
+                        "position": {
+                            "h": 716,
+                            "w": 1200,
+                            "x": 0,
+                            "y": 659
+                        },
+                        "type": "block"
+                    },
+                    {
+                        "item": "viz_mitre",
+                        "position": {
+                            "h": 250,
+                            "w": 1200,
+                            "x": 0,
+                            "y": 1375
+                        },
+                        "type": "block"
+                    }
+                ],
+                "type": "grid"
+            }
+        },
+        "options": {},
+        "tabs": {
+            "items": [
+                {
+                    "label": "Attack Analysis",
+                    "layoutId": "layout_1"
+                }
+            ]
+        }
+    }
+}
