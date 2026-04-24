@@ -101,13 +101,17 @@ Alerts (Discord) + Cowrie Dashboard
 - Lynis hardening score: 59/100
 
 ## Project Structure
+
+```
 ├── terraform/          # AWS infrastructure as code
 ├── splunk/
 │   ├── searches/       # SPL detection queries
 │   └── dashboards/     # Dashboard JSON definitions
 ├── scripts/            # Automation scripts
 ├── playbooks/          # Incident response procedures
-└── docs/screenshots/   # Evidence screenshots
+└── docs/
+    └── screenshots/    # Evidence screenshots
+```
 
 ## Setup
 
