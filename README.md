@@ -4,10 +4,10 @@ A SOC home lab that collects real-world attack data from a public-facing honeypo
 
 ## Live Results
 
-**4 days of data collected:**
-- 15+ unique attackers from 6 countries
+**7 days of data collected:**
+- 20+ unique attackers from 8 countries
 - 500+ events indexed in Splunk
-- Top attackers: India (76 events), China (69 events), Brazil (17 events), USA (12 events)
+- Top attacking countries: India (76), China (69), Brazil (17), USA (16)
 - Most common technique: T1082 System Information Discovery
 
 ## Architecture
@@ -16,7 +16,7 @@ Internet (real attackers)
 AWS EC2 t2.micro — Cowrie SSH Honeypot (Docker)
 ↓ Tailscale VPN (ACL: honeypot → Splunk:8088 only)
 ↓ HEC — every 1 minute via cron
-Splunk Enterprise (Windows) ← Ubuntu Apache + Windows Sysmon
+Splunk Enterprise (Windows)
 ↓
 Alerts (Discord) + Cowrie Dashboard
 ## Dashboard
@@ -70,13 +70,25 @@ Alerts (Discord) + Cowrie Dashboard
 
 ## Real Attacks Detected
 
-| IP | Country | Attempts | VirusTotal |
-|----|---------|----------|-----------|
-| 179.124.29.29 | Brazil | 17 | 15/95 Malicious |
-| 120.48.162.52 | China | 12 | — |
-| 106.13.78.62 | China | 9 | — |
-| 183.134.60.14 | China | 5 | — |
-| 47.110.244.136 | China | 5 | — |
+| Country | Events | Notes |
+|---------|--------|-------|
+| India | 76 | Digital Ocean VPS - automated scanner |
+| China | 69 | Multiple IPs - botnet activity |
+| Brazil | 17 | Confirmed malicious - 15/95 VirusTotal |
+| United States | 16 | Azure/AWS cloud scanners |
+| Bangladesh | 6 | IoT botnet |
+| United Kingdom | 3 | Cloud scanner |
+| Singapore | 2 | Asian botnet node |
+| Australia | 1 | Single scan attempt |
+
+## Top Passwords Attempted
+
+| Username | Password | Notes |
+|----------|----------|-------|
+| root | owejfeifvj | Random string - automated |
+| root | ------fuck------ | Aggressive scanner |
+| admin | admin | Default credentials |
+| orangepi | orangepi | IoT device targeting |
 
 ## Security Hardening
 
@@ -86,6 +98,7 @@ Alerts (Discord) + Cowrie Dashboard
 - SSH: password auth disabled, root login disabled
 - sudo: requires password (NOPASSWD removed)
 - Tailscale state: chmod 600 + chattr +i
+- Lynis hardening score: 59/100
 
 ## Project Structure
 ├── terraform/          # AWS infrastructure as code
@@ -95,6 +108,7 @@ Alerts (Discord) + Cowrie Dashboard
 ├── scripts/            # Automation scripts
 ├── playbooks/          # Incident response procedures
 └── docs/screenshots/   # Evidence screenshots
+
 ## Setup
 
 ```bash
@@ -106,6 +120,6 @@ terraform apply -var="your_ip=$(curl -s ifconfig.me)/32"
 ## Roadmap
 
 - [x] Week 1: Honeypot infrastructure + Splunk integration
-- [x] Week 2: Cowrie dashboard + MITRE ATT&CK mapping
+- [x] Week 2: Cowrie dashboard + MITRE ATT&CK mapping + Security hardening
 - [ ] Week 3: IR Playbooks + CloudTrail integration
 - [ ] Week 4: AbuseIPDB reporting + Prometheus monitoring
