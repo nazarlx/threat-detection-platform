@@ -15,14 +15,14 @@ resource "aws_vpc" "honeypot_vpc" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
-  tags = { Name = "honeypot-vpc", Project = "threat-detection-platform" }
+  tags                 = { Name = "honeypot-vpc", Project = "threat-detection-platform" }
 }
 
 resource "aws_subnet" "honeypot_subnet" {
   vpc_id                  = aws_vpc.honeypot_vpc.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
-  tags = { Name = "honeypot-subnet" }
+  tags                    = { Name = "honeypot-subnet" }
 }
 
 resource "aws_internet_gateway" "honeypot_igw" {
@@ -152,7 +152,7 @@ EOF
 
 resource "aws_s3_bucket" "cowrie_logs" {
   bucket = "cowrie-logs-${var.aws_account_id}"
-  tags = { Name = "cowrie-logs", Project = "threat-detection-platform" }
+  tags   = { Name = "cowrie-logs", Project = "threat-detection-platform" }
 }
 
 resource "aws_s3_bucket_versioning" "cowrie_logs" {
@@ -188,4 +188,53 @@ resource "aws_iam_role_policy" "honeypot_s3_policy" {
 resource "aws_iam_instance_profile" "honeypot_profile" {
   name = "honeypot-instance-profile"
   role = aws_iam_role.honeypot_role.name
+}
+
+resource "aws_s3_bucket_policy" "cloudtrail_policy" {
+  bucket     = aws_s3_bucket.cowrie_logs.id
+  depends_on = [aws_s3_bucket.cowrie_logs]
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AWSCloudTrailAclCheck"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action   = "s3:GetBucketAcl"
+        Resource = "arn:aws:s3:::cowrie-logs-${var.aws_account_id}"
+      },
+      {
+        Sid    = "AWSCloudTrailWrite"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action   = "s3:PutObject"
+        Resource = "arn:aws:s3:::cowrie-logs-${var.aws_account_id}/cloudtrail/AWSLogs/${var.aws_account_id}/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_cloudtrail" "honeypot_trail" {
+  name                          = "honeypot-trail"
+  s3_bucket_name                = aws_s3_bucket.cowrie_logs.id
+  s3_key_prefix                 = "cloudtrail"
+  include_global_service_events = true
+  is_multi_region_trail         = false
+  enable_logging                = true
+  depends_on                    = [aws_s3_bucket_policy.cloudtrail_policy]
+
+  tags = {
+    Name    = "honeypot-cloudtrail"
+    Project = "threat-detection-platform"
+  }
 }
