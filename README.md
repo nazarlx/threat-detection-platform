@@ -123,3 +123,34 @@ terraform apply -var="your_ip=$(curl -s ifconfig.me)/32"
 - [x] Week 2: Cowrie dashboard + MITRE ATT&CK mapping + Security hardening
 - [ ] Week 3: IR Playbooks + CloudTrail integration
 - [ ] Week 4: AbuseIPDB reporting + Prometheus monitoring
+
+## Notable Threat Actor
+
+**IP:** `31.56.209.39` | **ASN:** Swissnet LLC (UAE)  
+**Detected:** 2026-04-24 | **VirusTotal:** 11/94 malicious
+
+This IP was caught attempting a **Docker container escape** — a sophisticated attack beyond typical SSH scanners.
+
+### Attack Chain
+1. Connected via custom Go SSH client (`SSH-2.0-Go`)
+2. Authenticated with empty password
+3. Executed: `echo "cat /proc/1/mounts && ls /proc/1/; curl2; ps aux; ps" | sh`
+4. Checked `/proc/1/mounts` to detect container environment
+5. Attempted `curl2` — likely malware download attempt
+
+### Threat Intelligence
+| Source | Status |
+|--------|--------|
+| VirusTotal | 11/94 Malicious |
+| IPsum Blacklist | Listed |
+| NERD CESNET | Listed (score: 0.240) |
+| IntrusionLabs | DROP recommended |
+| GitHub suspicious IPs | Listed in 6+ repos |
+| Guardpot | 103 SSH brute force events |
+
+### MITRE ATT&CK
+| Technique | ID |
+|-----------|-----|
+| Brute Force: Password Guessing | T1110.001 |
+| Container Escape | T1611 |
+| System Information Discovery | T1082 |
