@@ -125,7 +125,7 @@ terraform apply -var="your_ip=$(curl -s ifconfig.me)/32"
 
 - [x] Week 1: Honeypot infrastructure + Splunk integration
 - [x] Week 2: Cowrie dashboard + MITRE ATT&CK mapping + Security hardening
-- [ ] Week 3: IR Playbooks + CloudTrail integration
+- [x] Week 3: IR Playbooks + CloudTrail integration
 - [ ] Week 4: AbuseIPDB reporting + Prometheus monitoring
 
 ## Notable Threat Actor
